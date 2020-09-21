@@ -6,37 +6,42 @@ using P = pair<ll, ll>;
 template <class T>
 using V = vector<T>;
 
+const int MAX = 64;
 const ll mod = 1e9 + 7;
 
-V<ll> fac, finv, inv;
-void comb_init(int max) {
-  fac.resize(max);
-  finv.resize(max);
-  inv.resize(max);
-  fac[0] = fac[1] = 1;
-  finv[0] = finv[1] = 1;
-  inv[1] = 1;
-  for (int i = 2; i < max; i++) {
-    fac[i] = fac[i - 1] * i % mod;
-    inv[i] = mod - inv[mod % i] * (mod / i) % mod;
-    finv[i] = finv[i - 1] * inv[i] % mod;
-  }
-}
-ll comb_cache(int n, int k) {
-  if (n < k) return 0;
-  if (n < 0 || k < 0) return 0;
-  return fac[n] * (finv[k] * finv[n - k] % mod) % mod;
-}
-
 int main() {
-  int n, k;
-  cin >> n >> k;
+  int n;
+  cin >> n;
+  V<ll> a(n);
+  rep(i, n) cin >> a[i];
 
-  comb_init(2020);
-  for (int i = 1; i <= k; i++) {
-    ll red = comb_cache(n - k + 1, i);
-    ll blue = comb_cache(k - 1, i - 1);
-    ll ans = red * blue % mod;
-    printf("%ld\n", ans);
+  V<V<P>> bits(n, V<P>(MAX, {0, 0}));
+  for (int i = 0; i < n; i++) {
+    rep(j, MAX) {
+      bits[i][j] = (i > 0) ? bits[i - 1][j] : P({0, 0});
+      if (a[i] >> j & 1)
+        bits[i][j].first++;
+      else
+        bits[i][j].second++;
+    }
   }
+  ll ans = 0;
+  rep(i, n - 1) {
+    V<P> b = bits[n - 1];
+    rep(j, MAX) {
+      b[j].first -= bits[i][j].first;
+      b[j].second -= bits[i][j].second;
+    }
+    ll e = 1;
+    rep(j, MAX) {
+      if (a[i] >> j & 1) {
+        ans += b[j].second * e % mod;
+      } else {
+        ans += b[j].first * e % mod;
+      }
+      ans %= mod;
+      e = e * 2 % mod;
+    }
+  }
+  cout << ans << endl;
 }
